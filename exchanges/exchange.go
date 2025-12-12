@@ -238,18 +238,32 @@ func (cm *connectionManager) Run(ctx context.Context) error {
 			return err
 		}
 
-		conn, _, err := cm.dialer.DialContext(ctx, cm.cfg.wssURL, cm.cfg.header)
+		conn, resp, err := cm.dialer.DialContext(ctx, cm.cfg.wssURL, cm.cfg.header)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return ctx.Err()
 			}
 			delay := cm.nextBackoff(attempt)
 			attempt++
-			cm.cfg.logger.ErrorContext(ctx, "websocket dial error", "err", err, "retry_in", delay)
+
+			// NOTE(@hadydotai): Trying to figure out why we can't dial Binance on fly.io
+			logAttrs := []any{"err", err, "retry_in", delay}
+			if resp != nil {
+				logAttrs = append(logAttrs, "status", resp.Status, "status_code", resp.StatusCode)
+				// Log useful headers if available (e.g. rate limit headers)
+				if val := resp.Header.Get("Retry-After"); val != "" {
+					logAttrs = append(logAttrs, "header_retry_after", val)
+				}
+			}
+
+			cm.cfg.logger.ErrorContext(ctx, "websocket dial error", logAttrs...)
 			if waitErr := cm.wait(ctx, delay); waitErr != nil {
 				return waitErr
 			}
 			continue
+		}
+		if resp != nil {
+			resp.Body.Close()
 		}
 
 		attempt = 0

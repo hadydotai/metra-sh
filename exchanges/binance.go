@@ -17,7 +17,7 @@ import (
 
 const (
 	binanceExchangeName = "binance"
-	binanceDefaultWSURL = "wss://stream.binance.com:443/ws"
+	binanceDefaultWSURL = "wss://stream.binance.com:9443/ws"
 )
 
 var (
@@ -32,12 +32,8 @@ const (
 )
 
 func (channel BinanceMarketChannel[Unqualified]) WithMarket(market string) (BinanceMarketChannel[Qualified], error) {
-	// Binance markets are lowercase in streams
 	market = strings.ToLower(market)
 	if _, ok := binanceMarkets[market]; !ok {
-		// You might want to allow all markets or strict check.
-		// For now we use the static list but if it's missing we can error or warn.
-		// Given the prompt asked to follow Bitstamp approach, strict check is safer.
 		return "", fmt.Errorf("unknown binance market %q: %w", market, ErrBinanceUnsupportedMarket)
 	}
 	return BinanceMarketChannel[Qualified](fmt.Sprintf("%s@%s", market, string(channel))), nil
@@ -353,7 +349,6 @@ func (b *Binance) runReader(ctx context.Context) error {
 func (b *Binance) routeMessage(msg socketMessage) {
 	raw := json.RawMessage(msg.Data)
 
-	// Check for control messages (e.g. subscribe result)
 	if binanceIsControlMessage(raw) {
 		return
 	}
@@ -364,16 +359,11 @@ func (b *Binance) routeMessage(msg socketMessage) {
 		return
 	}
 
-	// For Binance, we don't need a complex envelope decode like Bitstamp if we map fields directly.
-	// But let's verify it's a trade.
-	// Actually, binanceRouteKey ensures we have a valid channel.
-
 	subs := b.snapshotSubscribers(channel)
 	if len(subs) == 0 {
 		return
 	}
 
-	// We decode the trade event.
 	var trade binanceTradeEvent
 	if err := json.Unmarshal(raw, &trade); err != nil {
 		b.logger.Warn("binance trade decode failed", "channel", channel, "err", err)
@@ -439,8 +429,8 @@ func (b *Binance) monitorConnection(ctx context.Context) {
 
 func (b *Binance) resubscribeAll() {
 	streams := b.snapshotChannels()
-	// Binance allows multiple streams in one subscribe, but we can do one by one for simplicity
-	// or batch them. The API limit is generous.
+	// NOTE(@hadydotai): Binance allows multiple streams in one subscribe, but we can do one by one for simplicity
+	// and later batch them. The API limit is generous.
 	for _, stream := range streams {
 		if err := b.sendSubscribe(stream.String()); err != nil {
 			b.logger.Warn("binance resubscribe failed", "channel", stream.String(), "err", err)
@@ -578,7 +568,7 @@ func binanceIsControlMessage(raw []byte) bool {
 		Result any `json:"result"`
 		ID     any `json:"id"`
 	}
-	// If it has "result" (even null) and "id", it's a control response
+	// NOTE(@hadydotai): If it has "result" (even null) and "id", it's a control response, I think...
 	if err := json.Unmarshal(raw, &meta); err == nil {
 		return meta.ID != nil
 	}
