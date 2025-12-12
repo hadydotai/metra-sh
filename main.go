@@ -223,7 +223,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:        ":8080",
-		Handler:     mux,
+		Handler:     securityMiddleware(mux),
 		BaseContext: func(_ net.Listener) context.Context { return ctx },
 	}
 
@@ -241,4 +241,17 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		logger.Error("server shutdown failed", "err", err)
 	}
+}
+
+func securityMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// HSTS: Force HTTPS for 1 year, include subdomains
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		// XSS Protection
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		// Frame Options
+		w.Header().Set("X-Frame-Options", "DENY")
+		
+		next.ServeHTTP(w, r)
+	})
 }
