@@ -1,4 +1,7 @@
-# Metra
+<div style="text-align: center;">
+    <img src="./web/static/logo.svg" alt="Logo" width="64" />
+    <h1>Metra</h1>
+</div>
 
 [Website](https://metra.sh) | [API Docs](https://metra.sh/docs)
 
