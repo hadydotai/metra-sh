@@ -44,6 +44,7 @@ const (
 )
 
 func (channel BitstampMarketChannel[UnQualified]) WithMarket(market string) (BitstampMarketChannel[Qualified], error) {
+	market = strings.ToLower(market)
 	if _, ok := bitstampMarkets[market]; !ok {
 		return "", fmt.Errorf("unknown bitstamp market %q: %w", market, ErrBitstampUnsupportedMarket)
 	}
@@ -583,15 +584,15 @@ func (e *BitstampEvent) NormalizeTrade() (*Trade, error) {
 }
 
 type bitstampTradeData struct {
-	ID             int64   `json:"id"`
-	IDStr          string  `json:"id_str"`
-	Amount         any     `json:"amount"`
-	AmountStr      string  `json:"amount_str"`
-	Price          any     `json:"price"`
-	PriceStr       string  `json:"price_str"`
-	Type           int     `json:"type"`
-	Timestamp      string  `json:"timestamp"`
-	MicroTimestamp string  `json:"microtimestamp"`
+	ID             int64  `json:"id"`
+	IDStr          string `json:"id_str"`
+	Amount         any    `json:"amount"`
+	AmountStr      string `json:"amount_str"`
+	Price          any    `json:"price"`
+	PriceStr       string `json:"price_str"`
+	Type           int    `json:"type"`
+	Timestamp      string `json:"timestamp"`
+	MicroTimestamp string `json:"microtimestamp"`
 }
 
 func bitstampSubscribePayload(channel string) ([]byte, error) {
