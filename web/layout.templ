@@ -229,9 +229,9 @@ Write a script to consume this stream and [YOUR GOAL HERE].
 
 						<div>
 							<div class="text-xs uppercase tracking-widest text-gray-500 mb-2">JavaScript (Browser)</div>
-							<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300">
-								const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
-								es.onmessage = (e) => console.log(JSON.parse(e.data));
+							<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300">{ `const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
+es.onmessage = (e) => console.log(JSON.parse(e.data));
+` }
 							</div>
 						</div>
 
