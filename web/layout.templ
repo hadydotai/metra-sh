@@ -175,7 +175,7 @@ templ Docs() {
 					</ul>
 
 					<h4 class="text-lg font-semibold text-white mb-2">Event Data Structure</h4>
-					<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300 mb-8 whitespace-pre">{ `{
+					<pre class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300 mb-8 whitespace-pre">{ `{
   "event": "trade",
   "exchange": "binance",
   "payload": {
@@ -187,7 +187,7 @@ templ Docs() {
     "side": "sell",
     "timestamp": "2025-12-12T18:53:34.336+01:00"
   }
-}` }</div>
+}` }</pre>
 
 					<h4 class="text-lg font-semibold text-white mb-2">Common Errors</h4>
 					<ul class="space-y-2 mb-6 text-gray-400 text-sm font-mono">
@@ -199,9 +199,10 @@ templ Docs() {
 
 					<h3 class="text-xl font-semibold text-green-400 mb-4 mt-8">LLM Integration Prompt</h3>
 					<p class="text-gray-400 text-sm mb-2">Copy this prompt to give an LLM context about this API:</p>
-					<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-purple-300 select-all">
+					<pre class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-purple-300 select-all">
+						{ `
 You have access to a real-time crypto trade stream via SSE (Server-Sent Events) at:
-GET https://metra.sh/stream/&#123;exchange&#125;/&#123;pair&#125;/&#123;event&#125;?throttle=&#123;duration&#125;
+GET https://metra.sh/stream/{exchange}/{pair}/{event}?throttle={duration}
 
 Parameters:
 - exchange: "binance" or "bitstamp"
@@ -210,10 +211,11 @@ Parameters:
 - throttle (optional): e.g. "100ms", "1s"
 
 The stream returns JSON data lines:
-data: &#123;"event":"trade", "exchange":"...", "payload": &#123; "id":"...", "price":"...", "amount":"...", "side":"buy/sell", "timestamp":"..." &#125;&#125;
+data: {"event":"trade", "exchange":"...", "payload": { "id":"...", "price":"...", "amount":"...", "side":"buy/sell", "timestamp":"..." }}
 
 Write a script to consume this stream and [YOUR GOAL HERE].
-					</div>
+` }
+					</pre>
 				</div>
 
 				<div>
@@ -229,33 +231,33 @@ Write a script to consume this stream and [YOUR GOAL HERE].
 
 						<div>
 							<div class="text-xs uppercase tracking-widest text-gray-500 mb-2">JavaScript (Browser)</div>
-							<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300">{ `const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
+							<pre class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300">{ `const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
 es.onmessage = (e) => console.log(JSON.parse(e.data));
 ` }
-							</div>
+							</pre>
 						</div>
 
 						<div>
 							<div class="text-xs uppercase tracking-widest text-gray-500 mb-2">Go</div>
-							<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-yellow-300 whitespace-pre">{ `resp, _ := http.Get("https://metra.sh/stream/binance/btcusdt/trade")
+							<pre class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-yellow-300 whitespace-pre">{ `resp, _ := http.Get("https://metra.sh/stream/binance/btcusdt/trade")
 scanner := bufio.NewScanner(resp.Body)
 for scanner.Scan() {
     line := scanner.Text()
     if strings.HasPrefix(line, "data: ") {
         fmt.Println(line[6:]) // JSON payload
     }
-}` }</div>
+}` }</pre>
 						</div>
 
 						<div>
 							<div class="text-xs uppercase tracking-widest text-gray-500 mb-2">Python</div>
-							<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-green-300 whitespace-pre">{ `import requests
+							<pre class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-green-300 whitespace-pre">{ `import requests
 
 url = "https://metra.sh/stream/binance/btcusdt/trade"
 with requests.get(url, stream=True) as r:
     for line in r.iter_lines():
         if line and line.startswith(b"data: "):
-            print(line.decode('utf-8')[6:])` }</div>
+            print(line.decode('utf-8')[6:])` }</pre>
 						</div>
 					</div>
 				</div>

@@ -234,7 +234,7 @@ func Docs() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"prose prose-invert max-w-none\"><h1 class=\"text-3xl font-bold text-white mb-6 border-b border-gray-800 pb-4\">API Documentation</h1><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-12\"><div><h3 class=\"text-xl font-semibold text-green-400 mb-4\">SSE Streaming Endpoint</h3><p class=\"text-gray-400 mb-4\">Subscribe to real-time normalized trade data via Server-Sent Events.</p><div class=\"bg-gray-900 rounded-lg p-4 border border-gray-800 font-mono text-sm mb-6 shadow-2xl\"><div class=\"flex gap-2 text-purple-400 mb-2 font-bold\">GET <span class=\"text-gray-300\">/stream/&#123;exchange&#125;/&#123;pair&#125;/&#123;event&#125;</span></div></div><h4 class=\"text-lg font-semibold text-white mb-2\">Path Parameters</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm\"><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">exchange</code> : <span class=\"text-gray-500\">binance</span> or <span class=\"text-gray-500\">bitstamp</span></li><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">pair</code> : e.g., <span class=\"text-gray-500\">btcusdt</span>, <span class=\"text-gray-500\">ethusd</span> (<a href=\"/docs/pairs\" class=\"text-green-400 hover:underline\">See Full List</a>)</li><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">event</code> : <span class=\"text-gray-500\">trade</span></li></ul><h4 class=\"text-lg font-semibold text-white mb-2\">Query Parameters</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm\"><li><code class=\"text-blue-400 bg-gray-900 px-1 py-0.5 rounded\">throttle</code> : Optional duration (e.g. <span class=\"text-gray-500\">100ms</span>, <span class=\"text-gray-500\">1s</span>). Limits the update rate.</li></ul><h4 class=\"text-lg font-semibold text-white mb-2\">Event Data Structure</h4><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300 mb-8 whitespace-pre\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"prose prose-invert max-w-none\"><h1 class=\"text-3xl font-bold text-white mb-6 border-b border-gray-800 pb-4\">API Documentation</h1><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-12\"><div><h3 class=\"text-xl font-semibold text-green-400 mb-4\">SSE Streaming Endpoint</h3><p class=\"text-gray-400 mb-4\">Subscribe to real-time normalized trade data via Server-Sent Events.</p><div class=\"bg-gray-900 rounded-lg p-4 border border-gray-800 font-mono text-sm mb-6 shadow-2xl\"><div class=\"flex gap-2 text-purple-400 mb-2 font-bold\">GET <span class=\"text-gray-300\">/stream/&#123;exchange&#125;/&#123;pair&#125;/&#123;event&#125;</span></div></div><h4 class=\"text-lg font-semibold text-white mb-2\">Path Parameters</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm\"><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">exchange</code> : <span class=\"text-gray-500\">binance</span> or <span class=\"text-gray-500\">bitstamp</span></li><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">pair</code> : e.g., <span class=\"text-gray-500\">btcusdt</span>, <span class=\"text-gray-500\">ethusd</span> (<a href=\"/docs/pairs\" class=\"text-green-400 hover:underline\">See Full List</a>)</li><li><code class=\"text-green-500 bg-gray-900 px-1 py-0.5 rounded\">event</code> : <span class=\"text-gray-500\">trade</span></li></ul><h4 class=\"text-lg font-semibold text-white mb-2\">Query Parameters</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm\"><li><code class=\"text-blue-400 bg-gray-900 px-1 py-0.5 rounded\">throttle</code> : Optional duration (e.g. <span class=\"text-gray-500\">100ms</span>, <span class=\"text-gray-500\">1s</span>). Limits the update rate.</li></ul><h4 class=\"text-lg font-semibold text-white mb-2\">Event Data Structure</h4><pre class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300 mb-8 whitespace-pre\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -259,27 +259,54 @@ func Docs() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><h4 class=\"text-lg font-semibold text-white mb-2\">Common Errors</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm font-mono\"><li><span class=\"text-red-400\">400 Bad Request</span> : <span class=\"text-gray-500\">&#123; \"error\": \"invalid throttle duration\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\": \"requested pair not found\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\": \"requested exchange not found\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\":  \"requested event not found\" &#125;</span></li></ul><h3 class=\"text-xl font-semibold text-green-400 mb-4 mt-8\">LLM Integration Prompt</h3><p class=\"text-gray-400 text-sm mb-2\">Copy this prompt to give an LLM context about this API:</p><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-purple-300 select-all\">You have access to a real-time crypto trade stream via SSE (Server-Sent Events) at: GET https://metra.sh/stream/&#123;exchange&#125;/&#123;pair&#125;/&#123;event&#125;?throttle=&#123;duration&#125; Parameters: - exchange: \"binance\" or \"bitstamp\" - pair: e.g. \"btcusdt\" (binance) or \"btcusd\" (bitstamp) - event: \"trade\" - throttle (optional): e.g. \"100ms\", \"1s\" The stream returns JSON data lines: data: &#123;\"event\":\"trade\", \"exchange\":\"...\", \"payload\": &#123; \"id\":\"...\", \"price\":\"...\", \"amount\":\"...\", \"side\":\"buy/sell\", \"timestamp\":\"...\" &#125;&#125; Write a script to consume this stream and [YOUR GOAL HERE].</div></div><div><h3 class=\"text-xl font-semibold text-green-400 mb-4\">Example Usage</h3><div class=\"space-y-6\"><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">cURL</div><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-gray-300\">curl -N \"https://metra.sh/stream/binance/btcusdt/trade?throttle=500ms\"</div></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">JavaScript (Browser)</div><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</pre><h4 class=\"text-lg font-semibold text-white mb-2\">Common Errors</h4><ul class=\"space-y-2 mb-6 text-gray-400 text-sm font-mono\"><li><span class=\"text-red-400\">400 Bad Request</span> : <span class=\"text-gray-500\">&#123; \"error\": \"invalid throttle duration\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\": \"requested pair not found\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\": \"requested exchange not found\" &#125;</span></li><li><span class=\"text-red-400\">404 Not Found</span> : <span class=\"text-gray-500\">&#123; \"error\":  \"requested event not found\" &#125;</span></li></ul><h3 class=\"text-xl font-semibold text-green-400 mb-4 mt-8\">LLM Integration Prompt</h3><p class=\"text-gray-400 text-sm mb-2\">Copy this prompt to give an LLM context about this API:</p><pre class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-purple-300 select-all\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(`const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
-es.onmessage = (e) => console.log(JSON.parse(e.data));
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(`
+You have access to a real-time crypto trade stream via SSE (Server-Sent Events) at:
+GET https://metra.sh/stream/{exchange}/{pair}/{event}?throttle={duration}
+
+Parameters:
+- exchange: "binance" or "bitstamp"
+- pair: e.g. "btcusdt" (binance) or "btcusd" (bitstamp)
+- event: "trade"
+- throttle (optional): e.g. "100ms", "1s"
+
+The stream returns JSON data lines:
+data: {"event":"trade", "exchange":"...", "payload": { "id":"...", "price":"...", "amount":"...", "side":"buy/sell", "timestamp":"..." }}
+
+Write a script to consume this stream and [YOUR GOAL HERE].
 `)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 234, Col: 1}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 217, Col: 1}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">Go</div><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-yellow-300 whitespace-pre\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</pre></div><div><h3 class=\"text-xl font-semibold text-green-400 mb-4\">Example Usage</h3><div class=\"space-y-6\"><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">cURL</div><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-gray-300\">curl -N \"https://metra.sh/stream/binance/btcusdt/trade?throttle=500ms\"</div></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">JavaScript (Browser)</div><pre class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var17 string
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(`resp, _ := http.Get("https://metra.sh/stream/binance/btcusdt/trade")
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(`const es = new EventSource("https://metra.sh/stream/binance/btcusdt/trade");
+es.onmessage = (e) => console.log(JSON.parse(e.data));
+`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 236, Col: 1}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</pre></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">Go</div><pre class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-yellow-300 whitespace-pre\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(`resp, _ := http.Get("https://metra.sh/stream/binance/btcusdt/trade")
 scanner := bufio.NewScanner(resp.Body)
 for scanner.Scan() {
     line := scanner.Text()
@@ -288,18 +315,18 @@ for scanner.Scan() {
     }
 }`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 247, Col: 2}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 249, Col: 2}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">Python</div><div class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-green-300 whitespace-pre\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</pre></div><div><div class=\"text-xs uppercase tracking-widest text-gray-500 mb-2\">Python</div><pre class=\"bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-green-300 whitespace-pre\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(`import requests
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(`import requests
 
 url = "https://metra.sh/stream/binance/btcusdt/trade"
 with requests.get(url, stream=True) as r:
@@ -307,13 +334,13 @@ with requests.get(url, stream=True) as r:
         if line and line.startswith(b"data: "):
             print(line.decode('utf-8')[6:])`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 258, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/layout.templ`, Line: 260, Col: 44}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div></div></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</pre></div></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
