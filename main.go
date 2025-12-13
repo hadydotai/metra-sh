@@ -179,6 +179,9 @@ func main() {
 			http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 			return
 		}
+		
+		// Send headers immediately so client knows connection is open
+		flusher.Flush()
 
 		defer closeFn()
 
