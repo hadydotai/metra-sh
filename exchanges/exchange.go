@@ -78,6 +78,7 @@ type connectionManager struct {
 	conn   *websocket.Conn
 
 	writeMu sync.Mutex
+	writeCh chan []byte // Buffered channel for non-blocking writes
 
 	events chan ConnectionEvent
 
@@ -146,8 +147,9 @@ func newConnectionManager(wssURL string, opts connectionManagerConfig) (*connect
 	}
 
 	cm := &connectionManager{
-		cfg:    cfg,
-		events: make(chan ConnectionEvent, 8),
+		cfg:     cfg,
+		events:  make(chan ConnectionEvent, 8),
+		writeCh: make(chan []byte, 256),
 	}
 
 	cm.dialer = &websocket.Dialer{
@@ -164,16 +166,24 @@ func (cm *connectionManager) Events() <-chan ConnectionEvent {
 	return cm.events
 }
 
-// Send transmits the provided payload over the active websocket connection.
+// Send transmits the provided payload via the write channel (non-blocking).
 func (cm *connectionManager) Send(payload []byte) error {
 	if len(payload) == 0 {
 		return nil
 	}
+	// Check if connected first to fail fast
 	conn := cm.currentConn()
 	if conn == nil {
 		return ErrNotConnected
 	}
-	return cm.write(conn, payload)
+	
+	// Non-blocking send
+	select {
+	case cm.writeCh <- payload:
+		return nil
+	case <-time.After(500 * time.Millisecond):
+		return errors.New("connection manager: write buffer full")
+	}
 }
 
 // ForceReconnect closes the current connection to initiate a fresh dial cycle.
@@ -192,7 +202,8 @@ func (cm *connectionManager) currentConn() *websocket.Conn {
 	return cm.conn
 }
 
-func (cm *connectionManager) write(conn *websocket.Conn, payload []byte) error {
+// writeDirect writes to the socket immediately. Must be called from the write loop.
+func (cm *connectionManager) writeDirect(conn *websocket.Conn, payload []byte) error {
 	if conn == nil {
 		return ErrNotConnected
 	}
@@ -272,6 +283,8 @@ func (cm *connectionManager) Run(ctx context.Context) error {
 			return conn.SetReadDeadline(time.Now().Add(cm.cfg.readTimeout))
 		})
 		conn.SetPingHandler(func(message string) error {
+			cm.writeMu.Lock()
+			defer cm.writeMu.Unlock()
 			err := conn.WriteControl(websocket.PongMessage, []byte(message), time.Now().Add(cm.cfg.WriteTimeout))
 			if err == nil {
 				return conn.SetReadDeadline(time.Now().Add(cm.cfg.readTimeout))
@@ -285,9 +298,11 @@ func (cm *connectionManager) Run(ctx context.Context) error {
 		cm.publishEvent(ConnectionEvent{Type: ConnectionEventConnected})
 
 		connCtx, cancel := context.WithCancel(ctx)
-		errCh := make(chan error, 1)
+		errCh := make(chan error, 2)
 
 		go cm.readLoop(connCtx, conn, errCh)
+		go cm.writeLoop(connCtx, conn, errCh)
+		
 		if cm.cfg.heartbeat != nil {
 			go cm.heartBeatLoop(connCtx, conn, *cm.cfg.heartbeat, errCh)
 		}
@@ -324,7 +339,22 @@ func (cm *connectionManager) heartBeatLoop(ctx context.Context, conn *websocket.
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := cm.write(conn, cfg.payload); err != nil {
+			// Use Send to go through write channel
+			if err := cm.Send(cfg.payload); err != nil {
+				// Don't kill connection on full buffer, just log
+				cm.cfg.logger.Warn("heartbeat skipped", "err", err)
+			}
+		}
+	}
+}
+
+func (cm *connectionManager) writeLoop(ctx context.Context, conn *websocket.Conn, errCh chan<- error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg := <-cm.writeCh:
+			if err := cm.writeDirect(conn, msg); err != nil {
 				errCh <- err
 				return
 			}
