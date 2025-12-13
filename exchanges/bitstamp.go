@@ -532,14 +532,25 @@ func (e *BitstampEvent) NormalizeTrade() (*Trade, error) {
 		side = "sell"
 	}
 
+	getString := func(v any) string {
+		switch val := v.(type) {
+		case string:
+			return val
+		case float64:
+			return strconv.FormatFloat(val, 'f', -1, 64)
+		default:
+			return "0"
+		}
+	}
+
 	// Prefer string fields if available to avoid precision loss
 	price := data.PriceStr
 	if price == "" {
-		price = fmt.Sprintf("%f", data.Price)
+		price = getString(data.Price)
 	}
 	amount := data.AmountStr
 	if amount == "" {
-		amount = fmt.Sprintf("%f", data.Amount)
+		amount = getString(data.Amount)
 	}
 	id := data.IDStr
 	if id == "" {
@@ -574,9 +585,9 @@ func (e *BitstampEvent) NormalizeTrade() (*Trade, error) {
 type bitstampTradeData struct {
 	ID             int64   `json:"id"`
 	IDStr          string  `json:"id_str"`
-	Amount         float64 `json:"amount"`
+	Amount         any     `json:"amount"`
 	AmountStr      string  `json:"amount_str"`
-	Price          float64 `json:"price"`
+	Price          any     `json:"price"`
 	PriceStr       string  `json:"price_str"`
 	Type           int     `json:"type"`
 	Timestamp      string  `json:"timestamp"`
