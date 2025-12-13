@@ -1,6 +1,9 @@
 package exchanges
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 func ValidateMarket(exchange, pair string) bool {
 	pair = strings.ToLower(pair)
@@ -14,4 +17,22 @@ func ValidateMarket(exchange, pair string) bool {
 	default:
 		return false
 	}
+}
+
+func GetSupportedPairs(exchange string) []string {
+	var pairs []string
+	switch strings.ToLower(exchange) {
+	case "bitstamp":
+		pairs = make([]string, 0, len(bitstampMarkets))
+		for p := range bitstampMarkets {
+			pairs = append(pairs, p)
+		}
+	case "binance":
+		pairs = make([]string, 0, len(binanceMarkets))
+		for p := range binanceMarkets {
+			pairs = append(pairs, p)
+		}
+	}
+	sort.Strings(pairs)
+	return pairs
 }

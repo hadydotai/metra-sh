@@ -75,6 +75,11 @@ func main() {
 	// UI
 	mux.Handle("GET /", templ.Handler(web.Home()))
 	mux.Handle("GET /docs", templ.Handler(web.Docs()))
+	mux.HandleFunc("GET /docs/pairs", func(w http.ResponseWriter, r *http.Request) {
+		binance := exchanges.GetSupportedPairs("binance")
+		bitstamp := exchanges.GetSupportedPairs("bitstamp")
+		templ.Handler(web.Pairs(binance, bitstamp)).ServeHTTP(w, r)
+	})
 
 	// API Routes
 	mux.HandleFunc("GET /stream/{exchange}/{pair}/{event}", func(w http.ResponseWriter, r *http.Request) {

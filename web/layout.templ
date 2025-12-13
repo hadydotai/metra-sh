@@ -165,7 +165,7 @@ templ Docs() {
 					<h4 class="text-lg font-semibold text-white mb-2">Path Parameters</h4>
 					<ul class="space-y-2 mb-6 text-gray-400 text-sm">
 						<li><code class="text-green-500 bg-gray-900 px-1 py-0.5 rounded">exchange</code> : <span class="text-gray-500">binance</span> or <span class="text-gray-500">bitstamp</span></li>
-						<li><code class="text-green-500 bg-gray-900 px-1 py-0.5 rounded">pair</code> : e.g., <span class="text-gray-500">btcusdt</span>, <span class="text-gray-500">ethusd</span></li>
+						<li><code class="text-green-500 bg-gray-900 px-1 py-0.5 rounded">pair</code> : e.g., <span class="text-gray-500">btcusdt</span>, <span class="text-gray-500">ethusd</span> (<a href="/docs/pairs" class="text-green-400 hover:underline">See Full List</a>)</li>
 						<li><code class="text-green-500 bg-gray-900 px-1 py-0.5 rounded">event</code> : <span class="text-gray-500">trade</span></li>
 					</ul>
 
@@ -173,6 +173,21 @@ templ Docs() {
 					<ul class="space-y-2 mb-6 text-gray-400 text-sm">
 						<li><code class="text-blue-400 bg-gray-900 px-1 py-0.5 rounded">throttle</code> : Optional duration (e.g. <span class="text-gray-500">100ms</span>, <span class="text-gray-500">1s</span>). Limits the update rate.</li>
 					</ul>
+
+					<h4 class="text-lg font-semibold text-white mb-2">Event Data Structure</h4>
+					<div class="bg-gray-950 rounded-lg p-4 border border-gray-800 font-mono text-xs overflow-x-auto text-blue-300 mb-8 whitespace-pre">{ `{
+  "event": "trade",
+  "exchange": "binance",
+  "payload": {
+    "id": "5650440593",
+    "exchange": "binance",
+    "market": "btcusdt",
+    "price": "90033.29000000",
+    "amount": "0.00008000",
+    "side": "sell",
+    "timestamp": "2025-12-12T18:53:34.336+01:00"
+  }
+}` }</div>
 
 					<h4 class="text-lg font-semibold text-white mb-2">Common Errors</h4>
 					<ul class="space-y-2 mb-6 text-gray-400 text-sm font-mono">
