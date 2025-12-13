@@ -381,6 +381,8 @@ func (cm *connectionManager) readLoop(ctx context.Context, conn *websocket.Conn,
 		case cm.cfg.readCh <- msg:
 		case <-ctx.Done():
 			return
+		default:
+			cm.cfg.logger.Warn("readCh blocked", "readCh_len", len(cm.cfg.readCh))
 		}
 	}
 }
