@@ -64,7 +64,7 @@ const Dashboard = {
             }
 
             try {
-                const res = await fetch(url, { method: 'GET', signal: vnode.state.ac.signal })
+                const res = await fetch(url, { method: 'HEAD', signal: vnode.state.ac.signal })
                 if (!res.ok) {
                     const ct = res.headers.get("content-type")
                     if (ct && ct.includes("application/json")) {

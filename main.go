@@ -82,6 +82,46 @@ func main() {
 	})
 
 	// API Routes
+	mux.HandleFunc("HEAD /stream/{exchange}/{pair}/{event}", func(w http.ResponseWriter, r *http.Request) {
+		exchangeName := r.PathValue("exchange")
+		pair := r.PathValue("pair")
+		eventType := r.PathValue("event")
+
+		var (
+			throttleDuration time.Duration
+			err              error
+		)
+		if t := r.URL.Query().Get("throttle"); t != "" {
+			throttleDuration, err = time.ParseDuration(t)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{"error": "invalid throttle duration"})
+				return
+			}
+			_ = throttleDuration
+		}
+
+		// NOTE(@hadydotai): So we currently only support trades, spot trades to be exact. That's what we currently
+		// normalize, probably should move this out of here when I add more
+		if eventType != "trade" {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "requested event not found"})
+			return
+		}
+
+		// NOTE(@hadydotai): Same story ^^^^
+		if exchangeName != "binance" && exchangeName != "bitstamp" {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "requested exchange not found"})
+			return
+		}
+
+		if !exchanges.ValidateMarket(exchangeName, pair) {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "requested pair not found"})
+			return
+		}
+	})
 	mux.HandleFunc("GET /stream/{exchange}/{pair}/{event}", func(w http.ResponseWriter, r *http.Request) {
 		exchangeName := r.PathValue("exchange")
 		pair := r.PathValue("pair")
@@ -179,7 +219,7 @@ func main() {
 			http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 			return
 		}
-		
+
 		// Send headers immediately so client knows connection is open
 		flusher.Flush()
 
@@ -268,7 +308,7 @@ func securityMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		// Frame Options
 		w.Header().Set("X-Frame-Options", "DENY")
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
