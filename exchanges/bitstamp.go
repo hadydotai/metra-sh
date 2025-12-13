@@ -618,7 +618,7 @@ func bitstampRouteKey(raw []byte) (string, error) {
 		return "", err
 	}
 	// Ignore subscription success events which have no channel field in the top level object
-	if meta.Event == "bts:subscription_succeeded" || meta.Event == "bts:heartbeat" {
+	if meta.Event == "bts:subscription_succeeded" || meta.Event == "bts:unsubscription_succeeded" || meta.Event == "bts:heartbeat" {
 		return "", nil // Handled silently
 	}
 	if meta.Channel == "" {
