@@ -198,16 +198,25 @@ func main() {
 				continue
 			}
 
-			var payload any = evt
-			// Normalize if possible
+			var payload any
+			// Normalize (strict)
 			if binanceEvt, ok := evt.(*exchanges.BinanceEvent); ok {
-				if normalized, err := binanceEvt.NormalizeTrade(); err == nil {
-					payload = normalized
+				normalized, err := binanceEvt.NormalizeTrade()
+				if err != nil {
+					logger.Warn("normalization failed", "exchange", "binance", "err", err)
+					continue
 				}
+				payload = normalized
 			} else if bitstampEvt, ok := evt.(*exchanges.BitstampEvent); ok {
-				if normalized, err := bitstampEvt.NormalizeTrade(); err == nil {
-					payload = normalized
+				normalized, err := bitstampEvt.NormalizeTrade()
+				if err != nil {
+					logger.Warn("normalization failed", "exchange", "bitstamp", "err", err)
+					continue
 				}
+				payload = normalized
+			} else {
+				// Fallback for unknown types (should not happen)
+				payload = evt
 			}
 
 			// Normalize payload structure
