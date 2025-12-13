@@ -176,12 +176,13 @@ func (cm *connectionManager) Send(payload []byte) error {
 	if conn == nil {
 		return ErrNotConnected
 	}
-	
+
 	// Non-blocking send
 	select {
 	case cm.writeCh <- payload:
 		return nil
 	case <-time.After(500 * time.Millisecond):
+		cm.cfg.logger.Warn("connection manager: write buffer full", "writeCh_len", len(cm.writeCh))
 		return errors.New("connection manager: write buffer full")
 	}
 }
@@ -302,7 +303,7 @@ func (cm *connectionManager) Run(ctx context.Context) error {
 
 		go cm.readLoop(connCtx, conn, errCh)
 		go cm.writeLoop(connCtx, conn, errCh)
-		
+
 		if cm.cfg.heartbeat != nil {
 			go cm.heartBeatLoop(connCtx, conn, *cm.cfg.heartbeat, errCh)
 		}
