@@ -90,6 +90,9 @@ type BinanceSubscription struct {
 	id     string
 	stream BinanceMarketChannel[Qualified]
 	ch     chan *BinanceEvent
+	opts   SubscribeOptions
+
+	lastEnqueueUnixNano atomic.Int64
 
 	closeOnce sync.Once
 	closeFn   func()
@@ -113,17 +116,47 @@ func (s *BinanceSubscription) Close() error {
 	return nil
 }
 
-func (s *BinanceSubscription) deliver(evt *BinanceEvent) bool {
+func (s *BinanceSubscription) precheck(receivedAt time.Time) deliverOutcome {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed {
-		return false
+		return deliverOutcomeDroppedClosed
+	}
+	if s.opts.Throttle > 0 {
+		last := s.lastEnqueueUnixNano.Load()
+		if last != 0 && receivedAt.Sub(time.Unix(0, last)) < s.opts.Throttle {
+			return deliverOutcomeSkippedThrottle
+		}
+	}
+	return deliverOutcomeAllowed
+}
+
+func (s *BinanceSubscription) enqueue(evt *BinanceEvent) deliverOutcome {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.closed {
+		return deliverOutcomeDroppedClosed
 	}
 	select {
 	case s.ch <- evt:
-		return true
+		s.lastEnqueueUnixNano.Store(evt.ReceivedAt.UnixNano())
+		return deliverOutcomeDelivered
 	default:
-		return false
+		if s.opts.Mode == DeliveryModeLatestOnly {
+			// Best-effort "latest only": drop one buffered item (oldest) then enqueue the latest.
+			select {
+			case <-s.ch:
+			default:
+			}
+			select {
+			case s.ch <- evt:
+				s.lastEnqueueUnixNano.Store(evt.ReceivedAt.UnixNano())
+				return deliverOutcomeDelivered
+			default:
+				return deliverOutcomeDroppedBufferFull
+			}
+		}
+		return deliverOutcomeDroppedBufferFull
 	}
 }
 
@@ -261,6 +294,10 @@ func (b *Binance) Start(parent context.Context, out chan<- *Event) error {
 }
 
 func (b *Binance) Subscribe(ctx context.Context, stream BinanceMarketChannel[Qualified]) (*BinanceSubscription, error) {
+	return b.SubscribeWithOptions(ctx, stream, DefaultSubscribeOptions())
+}
+
+func (b *Binance) SubscribeWithOptions(ctx context.Context, stream BinanceMarketChannel[Qualified], opts SubscribeOptions) (*BinanceSubscription, error) {
 	if stream == "" {
 		return nil, errors.New("binance: stream is required")
 	}
@@ -275,10 +312,16 @@ func (b *Binance) Subscribe(ctx context.Context, stream BinanceMarketChannel[Qua
 		return nil, fmt.Errorf("binance: create subscription id: %w", err)
 	}
 
+	chSize := b.cfg.SubscriptionBuffer
+	if opts.Mode == DeliveryModeLatestOnly {
+		chSize = 1
+	}
+
 	sub := &BinanceSubscription{
 		id:     id,
 		stream: stream,
-		ch:     make(chan *BinanceEvent, b.cfg.SubscriptionBuffer),
+		ch:     make(chan *BinanceEvent, chSize),
+		opts:   opts,
 	}
 	sub.closeFn = func() {
 		b.dropSubscription(sub)
@@ -371,6 +414,11 @@ func (b *Binance) routeMessage(msg socketMessage) {
 	}
 
 	for _, sub := range subs {
+		switch sub.precheck(msg.ReceivedAt) {
+		case deliverOutcomeSkippedThrottle, deliverOutcomeDroppedClosed:
+			continue
+		}
+
 		evt := &BinanceEvent{
 			SubscriptionID: sub.ID(),
 			Stream:         sub.Stream(),
@@ -387,8 +435,9 @@ func (b *Binance) routeMessage(msg socketMessage) {
 			Raw:            raw,
 			ReceivedAt:     msg.ReceivedAt,
 		}
-		if !sub.deliver(evt) {
-			b.logger.Warn("binance subscriber channel full, dropping message", "subscription_id", sub.ID(), "channel", channel)
+
+		if outcome := sub.enqueue(evt); outcome == deliverOutcomeDroppedBufferFull {
+			b.logger.Warn("binance subscriber channel full, dropping message", "subscription_id", sub.ID(), "channel", channel, "mode", sub.opts.Mode)
 		}
 	}
 }

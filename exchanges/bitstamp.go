@@ -106,6 +106,9 @@ type BitstampSubscription struct {
 	id     string
 	stream BitstampMarketChannel[Qualified]
 	ch     chan *BitstampEvent
+	opts   SubscribeOptions
+
+	lastEnqueueUnixNano atomic.Int64
 
 	closeOnce sync.Once
 	closeFn   func()
@@ -129,17 +132,46 @@ func (s *BitstampSubscription) Close() error {
 	return nil
 }
 
-func (s *BitstampSubscription) deliver(evt *BitstampEvent) bool {
+func (s *BitstampSubscription) precheck(receivedAt time.Time) deliverOutcome {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed {
-		return false
+		return deliverOutcomeDroppedClosed
+	}
+	if s.opts.Throttle > 0 {
+		last := s.lastEnqueueUnixNano.Load()
+		if last != 0 && receivedAt.Sub(time.Unix(0, last)) < s.opts.Throttle {
+			return deliverOutcomeSkippedThrottle
+		}
+	}
+	return deliverOutcomeAllowed
+}
+
+func (s *BitstampSubscription) enqueue(evt *BitstampEvent) deliverOutcome {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.closed {
+		return deliverOutcomeDroppedClosed
 	}
 	select {
 	case s.ch <- evt:
-		return true
+		s.lastEnqueueUnixNano.Store(evt.ReceivedAt.UnixNano())
+		return deliverOutcomeDelivered
 	default:
-		return false
+		if s.opts.Mode == DeliveryModeLatestOnly {
+			select {
+			case <-s.ch:
+			default:
+			}
+			select {
+			case s.ch <- evt:
+				s.lastEnqueueUnixNano.Store(evt.ReceivedAt.UnixNano())
+				return deliverOutcomeDelivered
+			default:
+				return deliverOutcomeDroppedBufferFull
+			}
+		}
+		return deliverOutcomeDroppedBufferFull
 	}
 }
 
@@ -271,6 +303,11 @@ func (b *Bitstamp) Start(parent context.Context, out chan<- *Event) error {
 
 // Subscribe registers interest in a qualified Bitstamp channel and returns a routed subscription handle.
 func (b *Bitstamp) Subscribe(ctx context.Context, stream BitstampMarketChannel[Qualified]) (*BitstampSubscription, error) {
+	return b.SubscribeWithOptions(ctx, stream, DefaultSubscribeOptions())
+}
+
+// SubscribeWithOptions registers interest in a qualified Bitstamp channel with per-subscriber fanout behavior.
+func (b *Bitstamp) SubscribeWithOptions(ctx context.Context, stream BitstampMarketChannel[Qualified], opts SubscribeOptions) (*BitstampSubscription, error) {
 	if stream == "" {
 		return nil, errors.New("bitstamp: stream is required")
 	}
@@ -285,10 +322,16 @@ func (b *Bitstamp) Subscribe(ctx context.Context, stream BitstampMarketChannel[Q
 		return nil, fmt.Errorf("bitstamp: create subscription id: %w", err)
 	}
 
+	chSize := b.cfg.SubscriptionBuffer
+	if opts.Mode == DeliveryModeLatestOnly {
+		chSize = 1
+	}
+
 	sub := &BitstampSubscription{
 		id:     id,
 		stream: stream,
-		ch:     make(chan *BitstampEvent, b.cfg.SubscriptionBuffer),
+		ch:     make(chan *BitstampEvent, chSize),
+		opts:   opts,
 	}
 	sub.closeFn = func() {
 		b.dropSubscription(sub)
@@ -387,6 +430,10 @@ func (b *Bitstamp) routeMessage(msg socketMessage) {
 
 	market := bitstampMarketFromChannel(env.Channel)
 	for _, sub := range subs {
+		switch sub.precheck(msg.ReceivedAt) {
+		case deliverOutcomeSkippedThrottle, deliverOutcomeDroppedClosed:
+			continue
+		}
 		evt := &BitstampEvent{
 			SubscriptionID: sub.ID(),
 			Stream:         sub.Stream(),
@@ -397,8 +444,8 @@ func (b *Bitstamp) routeMessage(msg socketMessage) {
 			Raw:            raw,
 			ReceivedAt:     msg.ReceivedAt,
 		}
-		if !sub.deliver(evt) {
-			b.logger.Warn("bitstamp subscriber channel full, dropping message", "subscription_id", sub.ID(), "channel", env.Channel)
+		if outcome := sub.enqueue(evt); outcome == deliverOutcomeDroppedBufferFull {
+			b.logger.Warn("bitstamp subscriber channel full, dropping message", "subscription_id", sub.ID(), "channel", env.Channel, "mode", sub.opts.Mode)
 		}
 	}
 }

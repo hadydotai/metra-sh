@@ -161,10 +161,15 @@ func main() {
 		var nextEvent func() (any, error)
 		var closeFn func()
 
+		subOpts := exchanges.SubscribeOptions{
+			Throttle: throttleDuration,
+			Mode:     exchanges.DeliveryModeLatestOnly,
+		}
+
 		switch exchangeName {
 		case "bitstamp":
 			qualified, _ := exchanges.BitstampLiveTickerChannel.WithMarket(pair)
-			sub, err := bitstamp.Subscribe(r.Context(), qualified)
+			sub, err := bitstamp.SubscribeWithOptions(r.Context(), qualified, subOpts)
 			if err != nil {
 				logger.Error("bitstamp subscribe failed", "err", err)
 				http.Error(w, `{"error": "subscription failed"}`, http.StatusInternalServerError)
@@ -186,7 +191,7 @@ func main() {
 
 		case "binance":
 			qualified, _ := exchanges.BinanceTradeChannel.WithMarket(pair)
-			sub, err := binance.Subscribe(r.Context(), qualified)
+			sub, err := binance.SubscribeWithOptions(r.Context(), qualified, subOpts)
 			if err != nil {
 				logger.Error("binance subscribe failed", "err", err)
 				http.Error(w, `{"error": "subscription failed"}`, http.StatusInternalServerError)
@@ -226,16 +231,10 @@ func main() {
 		defer closeFn()
 
 		// Stream loop
-		var lastSent time.Time
 		for {
 			evt, err := nextEvent()
 			if err != nil {
 				return
-			}
-
-			// Throttling logic: Drop message if we sent one too recently
-			if throttleDuration > 0 && time.Since(lastSent) < throttleDuration {
-				continue
 			}
 
 			var payload any
@@ -274,7 +273,6 @@ func main() {
 
 			fmt.Fprintf(w, "data: %s\n\n", data)
 			flusher.Flush()
-			lastSent = time.Now()
 		}
 	})
 
