@@ -7,16 +7,16 @@ const Dashboard = {
     oninit: (vnode) => {
         vnode.state.exchange = "binance"
         vnode.state.pair = "btcusdt"
-        vnode.state.throttle = "2s"
+        vnode.state.throttle = "100ms"
         vnode.state.trades = []
         vnode.state.buffer = [] // Buffer for incoming trades when paused
         vnode.state.paused = false
         vnode.state.expandedId = null
-        
+
         vnode.state.connected = false
         vnode.state.error = null
         vnode.state.stats = { high: 0, low: Infinity, vol: 0 }
-        
+
         vnode.state.togglePause = () => {
             vnode.state.paused = !vnode.state.paused
             if (!vnode.state.paused) {
@@ -45,6 +45,11 @@ const Dashboard = {
             if (vnode.state.es) {
                 vnode.state.es.close()
             }
+            if (vnode.state.ac) {
+                vnode.state.ac.abort()
+            }
+
+            vnode.state.ac = new AbortController()
             vnode.state.trades = []
             vnode.state.buffer = []
             vnode.state.stats = { high: 0, low: Infinity, vol: 0 }
@@ -52,14 +57,14 @@ const Dashboard = {
             vnode.state.connected = false
             vnode.state.paused = false
             vnode.state.expandedId = null
-            
+
             let url = `/stream/${vnode.state.exchange}/${vnode.state.pair}/trade`
             if (vnode.state.throttle && vnode.state.throttle !== "0ms") {
                 url += `?throttle=${vnode.state.throttle}`
             }
 
             try {
-                const res = await fetch(url, { method: 'GET' })
+                const res = await fetch(url, { method: 'GET', signal: vnode.state.ac.signal })
                 if (!res.ok) {
                     const ct = res.headers.get("content-type")
                     if (ct && ct.includes("application/json")) {
@@ -71,20 +76,24 @@ const Dashboard = {
                     m.redraw()
                     return
                 }
+                // Connection is valid, abort the fetch to close this duplicate stream
+                // and let EventSource handle the real connection
+                vnode.state.ac.abort()
             } catch (e) {
+                if (e.name === 'AbortError') return // Ignore aborts
                 vnode.state.error = e.message
                 m.redraw()
                 return
             }
 
             vnode.state.es = new EventSource(url)
-            
+
             vnode.state.es.onopen = () => {
                 vnode.state.connected = true
                 vnode.state.error = null
                 m.redraw()
             }
-            
+
             vnode.state.es.onerror = () => {
                 vnode.state.connected = false
                 m.redraw()
@@ -93,7 +102,10 @@ const Dashboard = {
             vnode.state.es.onmessage = (e) => {
                 const msg = JSON.parse(e.data)
                 const trade = msg.payload
-                
+
+                // Defensive check: Ensure trade has ID (normalized)
+                if (!trade || !trade.id) return
+
                 // Parse numbers for stats
                 const price = parseFloat(trade.price)
                 const amount = parseFloat(trade.amount)
@@ -110,7 +122,7 @@ const Dashboard = {
                     vnode.state.trades.unshift(trade)
                     if (vnode.state.trades.length > 100) vnode.state.trades.pop()
                 }
-                
+
                 m.redraw()
             }
         }
