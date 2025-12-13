@@ -1,4 +1,3 @@
-// Mithril.js App
 const App = {
     view: () => m(Dashboard)
 }
@@ -206,11 +205,11 @@ const Dashboard = {
                 // Buffer/Pause Status
                 m("div", {
                     class: "bg-gray-900 border border-gray-800 p-4 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors " + (s.paused ? "border-yellow-500/50 bg-yellow-900/10" : ""),
-                    onclick: s.togglePause
+                    onclick: s.connected && s.togglePause
                 }, [
                     m("div", { class: "text-xs text-gray-500 uppercase tracking-wider mb-1 font-bold" }, "Status"),
                     m("div", { class: "text-xl font-mono font-bold flex items-center gap-2 " + (s.paused ? "text-yellow-400" : "text-gray-400") }, [
-                        m("span", s.paused ? "PAUSED" : "RUNNING"),
+                        m("span", s.connected ? (s.paused ? "PAUSED" : "RUNNING") : "DISCONNECTED"),
                         s.paused && s.buffer.length > 0 ? m("span", { class: "text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded-full" }, `+${s.buffer.length}`) : null
                     ])
                 ])
